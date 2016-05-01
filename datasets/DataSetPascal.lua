@@ -13,11 +13,11 @@ matio.use_lua_strings = true
 local DataSetPascal,parent = torch.class('detection.DataSetPascal', 'detection.DataSetDetection')
 
 local function lines_from(file)
--- get all lines from a file, returns an empty 
+-- get all lines from a file, returns an empty
 -- list/table if the file does not exist
   if not paths.filep(file) then return {} end
   local lines = {}
-  for line in io.lines(file) do 
+  for line in io.lines(file) do
     table.insert(lines,line)
   end
   return lines
@@ -112,18 +112,18 @@ function DataSetPascal:__init(...)
   parent.__init(self)
   local args = initcheck(...)
   for k,v in pairs(args) do self[k] = v end
-  
+
   local image_set = self.image_set
 
   if not self.year then
     self.year = 2007
   end
   local year = self.year
-    
+
   if not self.dataset_name then
     self.dataset_name = 'VOC'..year
   end
-  
+
   if not self.annopath then
     self.annopath = paths.concat(self.datadir,self.dataset_name,'Annotations','%s.xml')
   end
@@ -133,25 +133,25 @@ function DataSetPascal:__init(...)
   if not self.imgsetpath then
     self.imgsetpath = paths.concat(self.datadir,self.dataset_name,'ImageSets','Main','%s.txt')
   end
-    
+
   if not self.roidbfile and self.roidbdir then
     self.roidbfile = paths.concat(self.roidbdir,'voc_'..year..'_'..image_set..'.mat')
   end
-  
+
   self.num_classes = #self.classes
   self.class_to_id = {}
   for i,v in ipairs(self.classes) do
     self.class_to_id[v] = i
   end
-    
+
   self.img_ids = lines_from(string.format(self.imgsetpath,image_set))
   self.num_imgs = #self.img_ids
-  
-  -- 
+
+  --
   if self.image then
     self.img_ids = {}
   end
-  
+
   --[[
   self.sizes = {}
   print('Getting Image Sizes')
@@ -165,7 +165,7 @@ function DataSetPascal:__init(...)
   end
   self.sizes = torch.IntTensor(self.sizes)
   ]]
-  
+
 end
 
 function DataSetPascal:getImageSize(i)
@@ -201,7 +201,7 @@ function DataSetPascal:_write_detections(all_detections)
     end
   file:close()
   end
-  
+
 end
 
 function DataSetPascal:evaluate(all_detections)
@@ -276,18 +276,19 @@ function DataSetPascal:loadROIDB()
     return
   end
   local roidbfile = self.roidbfile
-  
+
+  print(roidbfile)
   assert(roidbfile and paths.filep(roidbfile),'Need to specify the bounding boxes file')
-  
+
   local dt = matio.load(roidbfile)
-  
+
   self.roidb = {}
   local img2roidb = {}
   -- compat: change coordinate order from [y1 x1 y2 x2] to [x1 y1 x2 y2]
   for i=1,#dt.images do
     img2roidb[dt.images[i] ] = i
   end
-  
+
   for i=1,self:size() do
     if dt.boxes[img2roidb[self.img_ids[i] ] ]:size(2) ~= 4 then
       table.insert(self.roidb,torch.IntTensor(0,4))
@@ -295,7 +296,7 @@ function DataSetPascal:loadROIDB()
       table.insert(self.roidb, dt.boxes[img2roidb[self.img_ids[i] ] ]:index(2,torch.LongTensor{2,1,4,3}):int())
     end
   end
-  
+
 end
 
 function DataSetPascal:getImagePath(i)
@@ -329,19 +330,19 @@ function DataSetPascal:getGTBoxes(i)
       end
     end
   end
-  
+
   gt_boxes:resize(#valid_objects,4)
   for idx0,idx in ipairs(valid_objects) do
     gt_boxes[idx0][1] = anno.object[idx].bndbox.xmin
     gt_boxes[idx0][2] = anno.object[idx].bndbox.ymin
     gt_boxes[idx0][3] = anno.object[idx].bndbox.xmax
     gt_boxes[idx0][4] = anno.object[idx].bndbox.ymax
-    
+
     table.insert(gt_classes,self.class_to_id[anno.object[idx].name])
   end
 
   return gt_boxes,gt_classes,valid_objects,anno
- 
+
 end
 
 function DataSetPascal:createROIs()

@@ -30,6 +30,7 @@ function config.parse(arg)
 	cmd:option('-pixel_means', {102.9801,115.9465,122.7717}, 'Pixel mean values (BGR order)')
 	cmd:option('-eps', 1e-14, 'Epsilon')
 	cmd:option('-log_path','./cache','Path used for saving log data')
+	cmd:option('-year', 2007, 'Year of the dataset')
 	cmd:option('-dataset','voc_2007','Dataset used for training')
 	cmd:option('-dataset_path','./data/datasets','Path to the dataset main folder')
 	cmd:option('-test_img_set','test','Image set to be used for testing')
@@ -41,7 +42,7 @@ function config.parse(arg)
 	cmd:option('-optim_snapshot_iters', 10000, 'Iterations between snapshots')
 	cmd:option('-save_path','./data/trained_models','Path to be used for saving the trained models')
 	cmd:option('-log_path','./data/log')
-	-- Parsing the command line 
+	-- Parsing the command line
 	config = cmd:parse(arg or {})
 	return config
 end
