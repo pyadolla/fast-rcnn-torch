@@ -147,11 +147,15 @@ function NetworkWrapper:testNetwork(db)
     avg_misc_time = avg_misc_time +misc_time
     print(string.format('Image# = %d/%d, detection time = %2.3fs, misc time = %2.3fs',i,n_image,det_time,misc_time))
 
+collectgarbage()
+
   end
   avg_misc_time = avg_misc_time / n_image
   avg_det_time = avg_det_time / n_image
   print(string.format('%d images detected!, average detection time = %2.3fs, average misc time = %2.3fs',n_image,avg_det_time,avg_misc_time))
-  
+
+collectgarbage() 
+ 
   -- local det_save_path = config.cache .. '/' .. db.dataset_name .. '_' .. db.image_set .. '_detections.t7'
   -- local thresholds_save_path = config.cache .. '/' .. db.dataset_name .. '_' .. db.image_set .. '_thresholds.t7'
   -- torch.save(det_save_path,all_detections)
@@ -176,6 +180,7 @@ function NetworkWrapper:testNetwork(db)
     end
   end
 
+collectgarbage()
 
   -- Try to evaluate using the official eval functions
   local return_val = db:evaluate(all_detections)
