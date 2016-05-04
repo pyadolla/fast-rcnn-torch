@@ -156,11 +156,11 @@ collectgarbage()
 
 collectgarbage() 
  
-  -- local det_save_path = config.cache .. '/' .. db.dataset_name .. '_' .. db.image_set .. '_detections.t7'
-  -- local thresholds_save_path = config.cache .. '/' .. db.dataset_name .. '_' .. db.image_set .. '_thresholds.t7'
-  -- torch.save(det_save_path,all_detections)
-  -- torch.save(thresholds_save_path,thresholds)
-  -- print('Detections saved into '.. det_save_path)
+   local det_save_path = config.cache .. '/' .. db.dataset_name .. '_' .. db.image_set .. '_detections.t7'
+   local thresholds_save_path = config.cache .. '/' .. db.dataset_name .. '_' .. db.image_set .. '_thresholds.t7'
+   torch.save(det_save_path,all_detections)
+   torch.save(thresholds_save_path,thresholds)
+   print('Detections saved into '.. det_save_path)
 
   -- prune the detections and apply nms
   for i=1,n_class do
@@ -179,7 +179,7 @@ collectgarbage()
       end
     end
   end
-
+print("finished nms");
 collectgarbage()
 
   -- Try to evaluate using the official eval functions

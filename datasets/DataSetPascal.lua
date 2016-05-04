@@ -145,7 +145,7 @@ function DataSetPascal:__init(...)
   end
 
   self.img_ids = lines_from(string.format(self.imgsetpath,image_set))
-  self.num_imgs = #self.img_ids
+  self.num_imgs = 10 --#self.img_ids
 
   --
   if self.image then
@@ -180,10 +180,12 @@ end
 function DataSetPascal:_write_detections(all_detections)
   -- write detectuions for the external matlab devkit
   local comp_id = 'comp4'
-  local save_path = config.dataset_path .. '/' .. config.dataset .. '/results/VOC' .. self.year .. '/Main/' .. comp_id .. '_'
+  -- local save_path = config.dataset_path .. '/' .. config.dataset .. '/results/VOC' .. self.year .. '/Main/' .. comp_id .. '_'
+  local save_path = config.dataset_path .. '/VOCdevkit/results/VOC' .. self.year .. '/Main/' .. comp_id .. '_'
   for cls_id,cls_name in ipairs(self.classes) do
     print('Writing detections for '.. cls_name)
     local file_path = save_path .. 'det_' .. self.image_set .. '_' .. cls_name .. '.txt'
+    print(file_path)
     -- open file
     local file = io.open(file_path,'w')
     for i = 1,self:size() do
@@ -214,14 +216,14 @@ function DataSetPascal:evaluate(all_detections)
   -- Generating the matlab terminal command
   local cmd = 'cd ' .. matlab_fun_path .. '&& ' ..
   'matlab -nodisplay -nodesktop '.. '-r "'..
-  string.format('voc_eval(\'%s\',\'%s\',\'%s\',\'%s\',%d); quit;"', '../../' .. config.dataset_path .. '/' .. config.dataset,
+  string.format('pwd; voc_eval(\'%s\',\'%s\',\'%s\',\'%s\',%d); quit;"', '/share/data/vision-greg/Pascal/VOCdevkit', --'../../' .. config.dataset_path .. '/' .. config.dataset,
     comp_id,self.image_set, '../../cache',0)
   print(cmd)
   return os.execute(cmd)
 end
 
 function DataSetPascal:size()
-  return #self.img_ids
+  return 10 --#self.img_ids
 end
 
 function DataSetPascal:getImage(i)
