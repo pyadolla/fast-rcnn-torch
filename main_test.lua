@@ -1,6 +1,9 @@
 -- Require the detection package
 require 'detection'
 
+torch.setheaptracking(true)
+cutorch.setHeapTracking(true)
+
 -- Paths
 local year = config.year
 local dataset_name = config.dataset
@@ -16,15 +19,24 @@ local model_path = config.model_def
 local dataset = detection.DataSetPascal({image_set = image_set, year = year, datadir = dataset_dir, dataset_name = dataset_name, roidbdir = ss_dir , roidbfile = ss_file})
 
 -- Creating the detection net
-model_opt = {}
-model_opt.test = false
-model_opt.nclass = dataset:nclass()
-model_opt.fine_tunning = not config.resume_training
-network = detection.Net(model_path,param_path, model_opt)
+--model_opt = {}
+--model_opt.test = true --false
+--model_opt.nclass = dataset:nclass()
+--model_opt.fine_tunning = not config.resume_training
+local model_opt = {}
+model_opt.fine_tuning = false
+model_opt.test = true
+if config.dataset== 'MSCOCO' then
+   model_opt.nclass = 80
+else
+   model_opt.nclass = 20
+end
 
+network = detection.Net(model_path,param_path, model_opt)
+collectgarbage()
+collectgarbage()
 -- Creating the wrapper
 local network_wrapper = detection.NetworkWrapper()
-
 -- Test the network
 print('Testing the network...')
 network_wrapper:testNetwork(dataset)
