@@ -88,22 +88,35 @@ function NetworkWrapper:testNetwork(db)
 
 
   for i=1,n_image do
-
     local im = db:getImage(i)
     -- Get the bounding boxes 
     local bboxes = db:getROIBoxes(i)
     local n_box = bboxes:size(1)
 
-
     -- Do the detection
     detect_timer:reset()
 
-    local scores,pred_boxes = self:detect(im,bboxes)
+    local scores, pred_boxes
+    if n_box > 10e3 then --split over multiple detect calls in case we have too many bboxes
+	for k=1,math.floor(n_box/10e3)+1 do
+	   local scrs,prd_bxs=self:detect(im,bboxes[{{(k-1)*10e3+1,math.min(n_box,k*10e3)},{}}])
+	   if not(scores) then
+	       scores=scrs:clone()
+               pred_boxes=prd_bxs:clone()
+           else
+               scores=torch.cat(scores,scrs,1)
+               pred_boxes=torch.cat(pred_boxes,prd_bxs,1)
+           end
+	end
+    else
+    	scores,pred_boxes = self:detect(im,bboxes)
+    end
     local det_time = detect_timer:time().real
     avg_det_time = avg_det_time + det_time
 
     misc_timer:reset()
-    
+   
+    print(scores:max()) 
     for j= 1,n_class do
         local class_scores = scores[{{},{j+1}}]
         local sel_inds = torch.range(1,n_box)[class_scores:ge(thresholds[j])]:long()
@@ -142,6 +155,9 @@ function NetworkWrapper:testNetwork(db)
           all_detections[j][i] = class_boxes:float():cat(class_scores)
 
         end
+    end
+    if i%100==0 then 
+	collectgarbage()
     end
     local misc_time = misc_timer:time().real
     avg_misc_time = avg_misc_time +misc_time
