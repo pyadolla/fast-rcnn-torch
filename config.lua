@@ -44,6 +44,7 @@ function config.parse(arg)
 	cmd:option('-log_path','./data/log')
 	-- Parsing the command line
 	config = cmd:parse(arg or {})
+	if config.model_weights=='' then config.model_weights=nil end
 	return config
 end
 
