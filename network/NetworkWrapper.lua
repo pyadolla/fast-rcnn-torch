@@ -195,9 +195,39 @@ collectgarbage()
       end
     end
   end
-print("finished nms");
-collectgarbage()
+  print("finished nms");
+  collectgarbage()
 
   -- Try to evaluate using the official eval functions
   local return_val = db:evaluate(all_detections)
+end
+
+function NetworkWrapper:writeDetections(db, all_detections, thresholds, alsoevaluate)
+  local n_image = db:size()
+  local n_class = db.num_classes
+  -- prune the detections and apply nms
+  for i=1,n_class do
+    for j=1,n_image do
+      if all_detections[i][j]:numel()~=0 then 
+        local n_box = all_detections[i][j]:size()[1]
+        local sel_inds = torch.range(1,n_box)[all_detections[i][j][{{},-1}]:gt(thresholds[i])]:long()
+        if sel_inds:numel() == 0 then
+          all_detections[i][j] = torch.FloatTensor()
+        else
+          all_detections[i][j] = all_detections[i][j]:index(1,sel_inds)
+          -- apply nms
+          local nms_inds = utils:nms(all_detections[i][j],config.nms)
+          all_detections[i][j] = all_detections[i][j]:index(1,nms_inds)
+        end
+      end
+    end
+  end
+  print("finished nms");
+  collectgarbage()
+  -- write detections
+  if alsoevaluate then
+    local return_val = db:evaluate(all_detections)
+  else
+    db:_write_detections(all_detections)
+  end
 end

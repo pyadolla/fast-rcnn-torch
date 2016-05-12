@@ -42,6 +42,8 @@ function config.parse(arg)
 	cmd:option('-optim_snapshot_iters', 10000, 'Iterations between snapshots')
 	cmd:option('-save_path','./data/trained_models','Path to be used for saving the trained models')
 	cmd:option('-log_path','./data/log')
+	cmd:option('-detection_file','', 'Path to detections file')
+	cmd:option('-threshold_file','', 'Path to the thresholds file')
 	-- Parsing the command line
 	config = cmd:parse(arg or {})
 	if config.model_weights=='' then config.model_weights=nil end
