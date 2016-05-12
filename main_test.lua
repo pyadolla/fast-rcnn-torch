@@ -38,5 +38,5 @@ collectgarbage()
 -- Creating the wrapper
 local network_wrapper = detection.NetworkWrapper()
 -- Test the network
-print('Testing the network...')
+print('Testing the network on ' .. dataset.image_set ..  ' set...')
 network_wrapper:testNetwork(dataset)

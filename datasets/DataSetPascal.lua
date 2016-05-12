@@ -213,6 +213,10 @@ function DataSetPascal:_write_detections(all_detections)
 end
 
 function DataSetPascal:evaluate(all_detections)
+  if self.image_set=='test' then
+    print('not running evaluation on test set, use the VOC server for this.')
+    return
+  end
   -- write detections
   self:_write_detections(all_detections)
   -- Here we use the matlab evaluation kit
