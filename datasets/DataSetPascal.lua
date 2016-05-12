@@ -213,7 +213,7 @@ function DataSetPascal:_write_detections(all_detections)
 end
 
 function DataSetPascal:evaluate(all_detections)
-  if self.image_set=='test' then
+  if  self.year~=2007 and self.image_set=='test' then
     print('not running evaluation on test set, use the VOC server for this.')
     return
   end
@@ -226,8 +226,8 @@ function DataSetPascal:evaluate(all_detections)
   -- Generating the matlab terminal command
   local cmd = 'cd ' .. matlab_fun_path .. '&& ' ..
   'matlab -nodisplay -nodesktop '.. '-r "'..
-  string.format('pwd; voc_eval(\'%s\',\'%s\',\'%s\',\'%s\',%d); quit;"', '/share/data/vision-greg/Pascal/VOCdevkit', --'../../' .. config.dataset_path .. '/' .. config.dataset,
-    comp_id,self.image_set, '../../cache',0)
+  string.format('pwd; voc_eval(\'%s\',\'%s\',%d,\'%s\',\'%s\',%d); quit;"', '/share/data/vision-greg/Pascal/VOCdevkit', --'../../' .. config.dataset_path .. '/' .. config.dataset,
+    comp_id,self.year,self.image_set, '../../cache',0)
   print(cmd)
   return os.execute(cmd)
 end
