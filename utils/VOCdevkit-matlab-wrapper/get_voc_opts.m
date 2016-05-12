@@ -4,7 +4,7 @@ tmp = pwd;
 cd(path);
 try
   addpath('VOCcode');
-  VOCinit;
+  VOCinit12;
 catch
   rmpath('VOCcode');
   cd(tmp);
