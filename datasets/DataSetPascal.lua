@@ -37,7 +37,6 @@ function env.istype(obj, typename)
   return torch.type(obj) == typename
 end
 
-
 local initcheck = argcheck{
   pack=true,
   noordered=true,
@@ -135,7 +134,14 @@ function DataSetPascal:__init(...)
   end
 
   if not self.roidbfile and self.roidbdir then
-    self.roidbfile = paths.concat(self.roidbdir,'voc_'..year..'_'..image_set..'.mat')
+
+    if paths.filep(paths.concat(self.roidbdir,'voc_'..year..'_'..image_set..'.t7')) then
+	print('loading t7 roidbfile')
+	self.roidbfile = paths.concat(self.roidbdir,'voc_'..year..'_'..image_set..'.t7')
+    else
+	print('loading mat roidbfile')
+    	self.roidbfile = paths.concat(self.roidbdir,'voc_'..year..'_'..image_set..'.mat')
+    end
   end
 
   self.num_classes = #self.classes
@@ -145,7 +151,7 @@ function DataSetPascal:__init(...)
   end
 
   self.img_ids = lines_from(string.format(self.imgsetpath,image_set))
-  self.num_imgs = 10 --#self.img_ids
+  self.num_imgs = #self.img_ids
 
   --
   if self.image then
@@ -207,6 +213,10 @@ function DataSetPascal:_write_detections(all_detections)
 end
 
 function DataSetPascal:evaluate(all_detections)
+  if  self.year~=2007 and self.image_set=='test' then
+    print('not running evaluation on test set, use the VOC server for this.')
+    return
+  end
   -- write detections
   self:_write_detections(all_detections)
   -- Here we use the matlab evaluation kit
@@ -216,17 +226,18 @@ function DataSetPascal:evaluate(all_detections)
   -- Generating the matlab terminal command
   local cmd = 'cd ' .. matlab_fun_path .. '&& ' ..
   'matlab -nodisplay -nodesktop '.. '-r "'..
-  string.format('pwd; voc_eval(\'%s\',\'%s\',\'%s\',\'%s\',%d); quit;"', '/share/data/vision-greg/Pascal/VOCdevkit', --'../../' .. config.dataset_path .. '/' .. config.dataset,
-    comp_id,self.image_set, '../../cache',0)
+  string.format('pwd; voc_eval(\'%s\',\'%s\',%d,\'%s\',\'%s\',%d); quit;"', '/share/data/vision-greg/Pascal/VOCdevkit', --'../../' .. config.dataset_path .. '/' .. config.dataset,
+    comp_id,self.year,self.image_set, '../../cache',0)
   print(cmd)
   return os.execute(cmd)
 end
 
 function DataSetPascal:size()
-  return 10 --#self.img_ids
+  return #self.img_ids
 end
 
 function DataSetPascal:getImage(i)
+  print(string.format(self.imgpath,self.img_ids[i]))
   return image.load(string.format(self.imgpath,self.img_ids[i]),3,'float')
 end
 
@@ -282,7 +293,11 @@ function DataSetPascal:loadROIDB()
   print(roidbfile)
   assert(roidbfile and paths.filep(roidbfile),'Need to specify the bounding boxes file')
 
-  local dt = matio.load(roidbfile)
+  if roidbfile:match('.t7') then
+     dt=torch.load(roidbfile)
+  else
+     dt = matio.load(roidbfile)
+  end
 
   self.roidb = {}
   local img2roidb = {}

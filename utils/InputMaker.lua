@@ -25,7 +25,7 @@ function InputMaker:process(orig_im,bboxes)
     -- Project ROIs
     local out_bboxes = ROI:projectImageROIs({bboxes},{im_scale})
 
-  	return out_im,out_bboxes,im_scale
+    return out_im,out_bboxes,im_scale
 end
 
 function InputMaker:_process_image(im)
