@@ -61,7 +61,7 @@ local initcheck = argcheck{
 	},
 	{name = "crowd_threshold",
    type = "number",
-   help = "threshold used for prunning proposals overlapping the crowd groun truth boxes",
+   help = "threshold used for prunning proposals overlapping the crowd ground truth boxes",
 	opt = true
 	},
 	{name = "top_k",
@@ -98,7 +98,7 @@ function DataSetCoco:__init(...)
 	 	self.load_from_cache = true
 	 end
 	 if not self.top_k then
-	 	self.top_k = 2000 
+	 	self.top_k = 2000
 	 end
 	 if not self.crowd_threshold then
 	 	self.crowd_threshold = 0.7
@@ -106,31 +106,31 @@ function DataSetCoco:__init(...)
 	 if not self.datadir then
 	 	self.datadir = config.dataset_path
 	 end
+	 if not self.dataset_name then
+	 	self.dataset_name = config.dataset
+	 end
 	 if not self.res_save_path then
-	 	local res_path = paths.concat(self.datadir,'results')
+	 	local res_path = paths.concat(self.datadir, self.dataset_name, 'results')
 	 	if not paths.dirp(res_path) then
 	 		paths.mkdir(res_path)
 	 	end
 	 	self.res_save_path = paths.concat(res_path,'detections_'..self.image_set..self.year..'.json')
 	 end
 	 if not self.eval_res_save_path then
-	 	local res_path = paths.concat(self.datadir,'results')
+	 	local res_path = paths.concat(self.datadir, self.dataset_name, 'results')
 	 	if not paths.dirp(res_path) then
 	 		paths.mkdir(res_path)
 	 	end
 	 	self.eval_res_save_path = paths.concat(res_path,'evaluation_results_'..self.image_set..self.year..'.json')
 	 end
 	 if not self.img_path then
-	 	self.img_path = paths.concat(self.datadir,self.image_set..self.year)
-	 end
-	 if not self.dataset_name then
-	 	self.dataset_name = config.dataset
+	 	self.img_path = paths.concat(self.datadir, self.dataset_name, self.image_set..self.year)
 	 end
 	 if not self.proposal_method then
 	 	self.proposal_method = 'selective_search'
 	 end
 	 if not self.annotation_root_path then
-	 	self.annotation_root_path = paths.concat(self.datadir,'annotations')
+	 	self.annotation_root_path = paths.concat(self.datadir, self.dataset_name, 'annotations')
 	 end
 
 	 if not self.proposal_root_path then
@@ -139,9 +139,9 @@ function DataSetCoco:__init(...)
 	 		file_name = file_name .. '_'
 	 	end
 	 	if self.image_set == 'val' then
-	 		file_name = file_name .. '_0' 
+	 		file_name = file_name .. '_0'
 	 	end
-	 	self.proposal_root_path = paths.concat(self.datadir, 'precomputed-coco', self.proposal_method,'mat','COCO_'..self.image_set..self.year)
+	 	self.proposal_root_path = paths.concat(self.datadir, self.dataset_name, 'precomputed-coco', self.proposal_method,'mat','COCO_'..self.image_set..self.year)
 	 end
 	 -- Loading annotation file
 	 local annotations_cache_path = paths.concat(config.cache,'coco_'.. self.image_set ..self.year ..'_annotations_cached.t7')
@@ -354,7 +354,7 @@ function DataSetCoco:size()
 end
 
 function DataSetCoco:_convert_to_x1y1x2y2(boxes)
-	return boxes[{{},{1,2}}]:cat(boxes[{{},{1,2}}]+boxes[{{},{3,4}}] - 1) 
+	return boxes[{{},{1,2}}]:cat(boxes[{{},{1,2}}]+boxes[{{},{3,4}}] - 1)
 end
 
 function DataSetCoco:_convert_to_xywh(boxes)
@@ -390,7 +390,7 @@ function DataSetCoco:loadROIDB()
 	end
 
 	-- Cache the loaded proposals
-	self:_filterCrowed()
+	self:_filterCrowd()
 	torch.save(cache_path,self.roidb)
 end
 
@@ -498,7 +498,7 @@ function DataSetCoco:_filterCrowd()
 		  			good_bbox_ids = utils:logical2ind(cur_overlaps:lt(self.crowd_threshold))
 		  		else
 		  			good_bbox_ids = good_bbox_ids:cat(utils:logical2ind(cur_overlaps:lt(self.crowd_threshold)))
-		  		end 
+		  		end
 		  	end
 		  	if good_bbox_ids:numel()==0 then
 		  		print('There is an image with no good bounding boxes!')
@@ -506,7 +506,6 @@ function DataSetCoco:_filterCrowd()
 		  		self.roidb[i] = boxes:index(1,good_bbox_ids)
 		  	end
 		  end
-		end 
+		end
 	end
 end
-
