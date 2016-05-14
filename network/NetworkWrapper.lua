@@ -88,22 +88,35 @@ function NetworkWrapper:testNetwork(db)
 
 
   for i=1,n_image do
-
     local im = db:getImage(i)
     -- Get the bounding boxes 
     local bboxes = db:getROIBoxes(i)
     local n_box = bboxes:size(1)
 
-
     -- Do the detection
     detect_timer:reset()
 
-    local scores,pred_boxes = self:detect(im,bboxes)
+    local scores, pred_boxes
+    if n_box > 10e3 then --split over multiple detect calls in case we have too many bboxes
+	for k=1,math.floor(n_box/10e3)+1 do
+	   local scrs,prd_bxs=self:detect(im,bboxes[{{(k-1)*10e3+1,math.min(n_box,k*10e3)},{}}])
+	   if not(scores) then
+	       scores=scrs:clone()
+               pred_boxes=prd_bxs:clone()
+           else
+               scores=torch.cat(scores,scrs,1)
+               pred_boxes=torch.cat(pred_boxes,prd_bxs,1)
+           end
+	end
+    else
+    	scores,pred_boxes = self:detect(im,bboxes)
+    end
     local det_time = detect_timer:time().real
     avg_det_time = avg_det_time + det_time
 
     misc_timer:reset()
-    
+   
+    print(scores:max()) 
     for j= 1,n_class do
         local class_scores = scores[{{},{j+1}}]
         local sel_inds = torch.range(1,n_box)[class_scores:ge(thresholds[j])]:long()
@@ -143,20 +156,27 @@ function NetworkWrapper:testNetwork(db)
 
         end
     end
+    if i%100==0 then 
+	collectgarbage()
+    end
     local misc_time = misc_timer:time().real
     avg_misc_time = avg_misc_time +misc_time
     print(string.format('Image# = %d/%d, detection time = %2.3fs, misc time = %2.3fs',i,n_image,det_time,misc_time))
+
+collectgarbage()
 
   end
   avg_misc_time = avg_misc_time / n_image
   avg_det_time = avg_det_time / n_image
   print(string.format('%d images detected!, average detection time = %2.3fs, average misc time = %2.3fs',n_image,avg_det_time,avg_misc_time))
-  
-  -- local det_save_path = config.cache .. '/' .. db.dataset_name .. '_' .. db.image_set .. '_detections.t7'
-  -- local thresholds_save_path = config.cache .. '/' .. db.dataset_name .. '_' .. db.image_set .. '_thresholds.t7'
-  -- torch.save(det_save_path,all_detections)
-  -- torch.save(thresholds_save_path,thresholds)
-  -- print('Detections saved into '.. det_save_path)
+
+collectgarbage() 
+ 
+   local det_save_path = config.cache .. '/' .. db.dataset_name .. '_' .. db.image_set .. '_detections.t7'
+   local thresholds_save_path = config.cache .. '/' .. db.dataset_name .. '_' .. db.image_set .. '_thresholds.t7'
+   torch.save(det_save_path,all_detections)
+   torch.save(thresholds_save_path,thresholds)
+   print('Detections saved into '.. det_save_path)
 
   -- prune the detections and apply nms
   for i=1,n_class do
@@ -175,8 +195,39 @@ function NetworkWrapper:testNetwork(db)
       end
     end
   end
-
+  print("finished nms");
+  collectgarbage()
 
   -- Try to evaluate using the official eval functions
   local return_val = db:evaluate(all_detections)
+end
+
+function NetworkWrapper:writeDetections(db, all_detections, thresholds, alsoevaluate)
+  local n_image = db:size()
+  local n_class = db.num_classes
+  -- prune the detections and apply nms
+  for i=1,n_class do
+    for j=1,n_image do
+      if all_detections[i][j]:numel()~=0 then 
+        local n_box = all_detections[i][j]:size()[1]
+        local sel_inds = torch.range(1,n_box)[all_detections[i][j][{{},-1}]:gt(thresholds[i])]:long()
+        if sel_inds:numel() == 0 then
+          all_detections[i][j] = torch.FloatTensor()
+        else
+          all_detections[i][j] = all_detections[i][j]:index(1,sel_inds)
+          -- apply nms
+          local nms_inds = utils:nms(all_detections[i][j],config.nms)
+          all_detections[i][j] = all_detections[i][j]:index(1,nms_inds)
+        end
+      end
+    end
+  end
+  print("finished nms");
+  collectgarbage()
+  -- write detections
+  if alsoevaluate then
+    local return_val = db:evaluate(all_detections)
+  else
+    db:_write_detections(all_detections)
+  end
 end

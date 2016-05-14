@@ -1,8 +1,7 @@
-function res = voc_eval(path, comp_id, test_set, output_dir, rm_res)
+function res = voc_eval(path, comp_id, year, test_set, output_dir, rm_res)
 
-VOCopts = get_voc_opts(path);
+VOCopts = get_voc_opts(path, year);
 VOCopts.testset = test_set;
-
 for i = 1:length(VOCopts.classes)
   cls = VOCopts.classes{i};
   res(i) = voc_eval_cls(cls, VOCopts, comp_id, output_dir, rm_res);
@@ -16,11 +15,14 @@ fprintf('%.1f\n', mean(aps) * 100);
 fprintf('~~~~~~~~~~~~~~~~~~~~\n');
 
 function res = voc_eval_cls(cls, VOCopts, comp_id, output_dir, rm_res)
-
 test_set = VOCopts.testset;
 year = VOCopts.dataset(4:end);
 
-addpath(fullfile(VOCopts.datadir, 'VOCcode'));
+if str2num(year) == 2007,
+  addpath(fullfile(VOCopts.datadir, 'VOCcode07'));
+else
+  addpath(fullfile(VOCopts.datadir, 'VOCcode'));
+end
 
 res_fn = sprintf(VOCopts.detrespath, comp_id, cls);
 
@@ -57,4 +59,8 @@ if rm_res
   delete(res_fn);
 end
 
-rmpath(fullfile(VOCopts.datadir, 'VOCcode'));
+if str2num(year) == 2007,
+  rmpath(fullfile(VOCopts.datadir, 'VOCcode07'));
+else
+  rmpath(fullfile(VOCopts.datadir, 'VOCcode'));
+end

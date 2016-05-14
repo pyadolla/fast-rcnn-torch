@@ -1,9 +1,6 @@
 -- Require the detection package
 require 'detection'
 
-torch.setheaptracking(true)
-cutorch.setHeapTracking(true)
-
 -- Paths
 local year = config.year
 local dataset_name = config.dataset
@@ -18,25 +15,17 @@ local model_path = config.model_def
 -- Loading the dataset
 local dataset = detection.DataSetPascal({image_set = image_set, year = year, datadir = dataset_dir, dataset_name = dataset_name, roidbdir = ss_dir , roidbfile = ss_file})
 
--- Creating the detection net
---model_opt = {}
---model_opt.test = true --false
---model_opt.nclass = dataset:nclass()
---model_opt.fine_tunning = not config.resume_training
-local model_opt = {}
-model_opt.fine_tuning = false
-model_opt.test = true
-if config.dataset== 'MSCOCO' then
-   model_opt.nclass = 80
-else
-   model_opt.nclass = 20
+if not paths.filep(config.detection_file) then
+  error('need to provide detection file')
 end
 
-network = detection.Net(model_path,param_path, model_opt)
-collectgarbage()
-collectgarbage()
+if not paths.filep(config.threshold_file) then
+  error('need to provide threshold file')
+end
+
+local all_detections=torch.load(config.detection_file)
+local thresholds = torch.load(config.threshold_file)
+
 -- Creating the wrapper
 local network_wrapper = detection.NetworkWrapper()
--- Test the network
-print('Testing the network on ' .. dataset.image_set ..  ' set...')
-network_wrapper:testNetwork(dataset)
+network_wrapper:writeDetections(dataset,all_detections,thresholds,true)
