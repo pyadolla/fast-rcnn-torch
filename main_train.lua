@@ -1,5 +1,9 @@
 -- Require the detection package
 require 'detection'
+
+torch.setheaptracking(true)
+cutorch.setHeapTracking(true)
+
 -- Paths
 local year = config.year
 local dataset_name = config.dataset

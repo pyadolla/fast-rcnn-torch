@@ -104,7 +104,10 @@ local initcheck = argcheck{
   {name="dataset_name",
    type="string",
    help="Name of the dataset",
-   opt = true}--[[,
+   opt = true},
+   {name="comp_id",
+    type="string",
+    help="Competition ID"}--[[,
   {name="image",
    type="torch.Tensor",
    help="Dataset of one single image",
@@ -140,6 +143,10 @@ function DataSetPascal:__init(...)
   end
   if not self.imgsetpath then
     self.imgsetpath = paths.concat(self.datadir,self.dataset_name,'ImageSets','Main','%s.txt')
+  end
+
+  if not self.comp_id then
+     self.comp_id = 'comp4'
   end
 
   if not self.roidbfile and self.roidbdir then
@@ -199,7 +206,7 @@ function DataSetPascal:_write_detections(all_detections)
   end
   local exp_id = self.exp_id
 
-  local comp_id = 'comp4'
+  local comp_id = self.comp_id
   -- local save_path = config.dataset_path .. '/' .. config.dataset .. '/results/VOC' .. self.year .. '/Main/' .. comp_id .. '_'
   local save_path = config.dataset_path .. '/VOCresults/' .. exp_id .. '/results/VOC' .. self.year .. '/Main/'
   os.execute("mkdir -p " .. save_path)
@@ -238,12 +245,12 @@ function DataSetPascal:evaluate(all_detections)
   -- write detections
   self:_write_detections(all_detections)
   -- Here we use the matlab evaluation kit
-  local comp_id = 'comp4'
   if not self.exp_id then
     self.exp_id = 1
   end
   local exp_id = self.exp_id
 
+  local comp_id = self.comp_id
   local matlab_fun_path = './utils/VOCdevkit-matlab-wrapper'
 
   -- Generating the matlab terminal command
