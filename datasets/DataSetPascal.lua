@@ -81,6 +81,10 @@ local initcheck = argcheck{
    type="number",
    help="Year of the dataset (for Pascal)",
    opt = true},
+  {name="exp_id",
+   type="number",
+   help="Experiment ID (for Pascal)",
+   opt = true},
   {name="roidbdir",
    type="string",
    help="Path to the folder with the bounding boxes",
@@ -122,6 +126,11 @@ function DataSetPascal:__init(...)
   if not self.dataset_name then
     self.dataset_name = 'VOC'..year
   end
+
+  if not self.exp_id then
+    self.exp_id = 1
+  end
+  local exp_id = self.exp_id
 
   if not self.annopath then
     self.annopath = paths.concat(self.datadir,self.dataset_name,'Annotations','%s.xml')
@@ -185,13 +194,21 @@ end
 
 function DataSetPascal:_write_detections(all_detections)
   -- write detectuions for the external matlab devkit
+  if not self.exp_id then
+    self.exp_id = 1
+  end
+  local exp_id = self.exp_id
+
   local comp_id = 'comp4'
   -- local save_path = config.dataset_path .. '/' .. config.dataset .. '/results/VOC' .. self.year .. '/Main/' .. comp_id .. '_'
-  local save_path = config.dataset_path .. '/VOCdevkit/results/VOC' .. self.year .. '/Main/' .. comp_id .. '_'
+  local save_path = config.dataset_path .. '/VOCresults/' .. exp_id .. '/results/VOC' .. self.year .. '/Main/'
+  os.execute("mkdir -p " .. save_path)
+  -- os.execute("ln -s /share/data/vision-greg/Pascal/VOCdevkit " .. save_path .. '../../../' .. "VOCdevkit")
   for cls_id,cls_name in ipairs(self.classes) do
     print('Writing detections for '.. cls_name)
-    local file_path = save_path .. 'det_' .. self.image_set .. '_' .. cls_name .. '.txt'
+    local file_path = save_path .. comp_id .. '_' .. 'det_' .. self.image_set .. '_' .. cls_name .. '.txt'
     print(file_path)
+    
     -- open file
     local file = io.open(file_path,'w')
     for i = 1,self:size() do
@@ -202,7 +219,8 @@ function DataSetPascal:_write_detections(all_detections)
         local n_det = detections:size(1)
         for d = 1,n_det do
           file:write(string.format('%s %.3f %.1f %.1f %.1f %.1f\n',
-            cur_img, detections[d][-1], detections[d][1], detections[d][2], detections[d][3], detections[d][4]))
+            cur_img, detections[d][-1], detections[d][1], detections[d][2], 
+            detections[d][3], detections[d][4]) )
 
         end
       end
@@ -221,12 +239,20 @@ function DataSetPascal:evaluate(all_detections)
   self:_write_detections(all_detections)
   -- Here we use the matlab evaluation kit
   local comp_id = 'comp4'
+  if not self.exp_id then
+    self.exp_id = 1
+  end
+  local exp_id = self.exp_id
+
   local matlab_fun_path = './utils/VOCdevkit-matlab-wrapper'
 
   -- Generating the matlab terminal command
   local cmd = 'cd ' .. matlab_fun_path .. '&& ' ..
   'matlab -nodisplay -nodesktop '.. '-r "'..
-  string.format('pwd; voc_eval(\'%s\',\'%s\',%d,\'%s\',\'%s\',%d); quit;"', '/share/data/vision-greg/Pascal/VOCdevkit', --'../../' .. config.dataset_path .. '/' .. config.dataset,
+  string.format('pwd; voc_eval(\'%s\',\'%s\',%d,\'%s\',\'%s\',%d); quit;"', 
+    --'/share/data/vision-greg/Pascal/VOCdevkit', 
+    '../../' .. config.dataset_path .. '/VOCresults/' .. exp_id .. '/',
+    --'../../' .. config.dataset_path .. '/' .. config.dataset,
     comp_id,self.year,self.image_set, '../../cache',0)
   print(cmd)
   return os.execute(cmd)

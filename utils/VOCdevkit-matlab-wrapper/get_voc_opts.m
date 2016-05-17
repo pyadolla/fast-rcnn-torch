@@ -1,12 +1,13 @@
 function VOCopts = get_voc_opts(path,year)
 
+path = [path '../../VOCdevkit']
 tmp = pwd;
 cd(path);
 try
   if year==2007,
     addpath('VOCcode07')
   else
-   addpath('VOCcode');
+    addpath('VOCcode');
   end
   VOCinit;%12;
 catch

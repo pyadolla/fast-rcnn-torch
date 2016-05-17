@@ -4,7 +4,7 @@ VOCopts = get_voc_opts(path, year);
 VOCopts.testset = test_set;
 for i = 1:length(VOCopts.classes)
   cls = VOCopts.classes{i};
-  res(i) = voc_eval_cls(cls, VOCopts, comp_id, output_dir, rm_res);
+  res(i) = voc_eval_cls(path, cls, VOCopts, comp_id, output_dir, rm_res);
 end
 
 fprintf('\n~~~~~~~~~~~~~~~~~~~~\n');
@@ -14,7 +14,7 @@ fprintf('%.1f\n', aps * 100);
 fprintf('%.1f\n', mean(aps) * 100);
 fprintf('~~~~~~~~~~~~~~~~~~~~\n');
 
-function res = voc_eval_cls(cls, VOCopts, comp_id, output_dir, rm_res)
+function res = voc_eval_cls(path, cls, VOCopts, comp_id, output_dir, rm_res)
 test_set = VOCopts.testset;
 year = VOCopts.dataset(4:end);
 
@@ -23,6 +23,15 @@ if str2num(year) == 2007,
 else
   addpath(fullfile(VOCopts.datadir, 'VOCcode'));
 end
+
+%disp(VOCopts);
+respath =['results/VOC',year,'/Main/'];
+[oldpath,name,ext] = fileparts(VOCopts.detrespath);
+VOCopts.detrespath =  [path,respath,'%s_det_', test_set, '_%s',ext]; %['/%s_det_' test_set '_%s.txt']; %[path,respath,name,ext]
+[oldpath,name,ext] = fileparts(VOCopts.resdir);
+VOCopts.resdir =  [path,respath,name,ext];
+
+%disp(VOCopts.detrespath);
 
 res_fn = sprintf(VOCopts.detrespath, comp_id, cls);
 

@@ -5,14 +5,14 @@ local year = config.year
 local dataset_name = config.dataset
 local image_set = config.train_img_set
 local dataset_dir = config.dataset_path --paths.concat(config.dataset_path,dataset_name)
-local ss_dir = './data/datasets/selective_search/'
+local roi_path = config.roi_path  --'./data/datasets/selective_search/'
 --local ss_file =  paths.concat(ss_dir, dataset_name .. '_' .. image_set .. '.mat')
 local param_path = config.pre_trained_file
 local model_path = config.model_def
 
 
 -- Loading the dataset
-local dataset = detection.DataSetPascal({image_set = image_set, year = year, datadir = dataset_dir, dataset_name = dataset_name, roidbdir = ss_dir , roidbfile = ss_file})
+local dataset = detection.DataSetPascal({image_set = image_set, year = year, datadir = dataset_dir, dataset_name = dataset_name, roidbdir = roi_path})
 --local dataset = detection.DataSetCoco({image_set = image_set, datadir = dataset_dir})
 
 
