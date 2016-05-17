@@ -16,6 +16,7 @@ local model_path = config.model_def
 
 
 -- Loading the dataset
+
 local dataset = detection.DataSetPascal({image_set = image_set, year = year, datadir = dataset_dir, dataset_name = dataset_name, roidbdir = roi_path})
 --local dataset = detection.DataSetCoco({image_set = image_set, datadir = dataset_dir})
 

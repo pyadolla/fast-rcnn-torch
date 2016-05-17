@@ -16,8 +16,14 @@ local model_path = config.model_def
 local comp_id = 'comp4-4567'
 
 -- Loading the dataset
-local dataset = detection.DataSetPascal({image_set = image_set, year = year, datadir = dataset_dir, dataset_name = dataset_name, roidbdir = roi_path , roidbfile = ss_file, comp_id = comp_id})
-
+local dataset
+if dataset_name == 'COCO' then
+    print('COCO')
+    dataset = detection.DataSetCoco({image_set = image_set, year = year, datadir = dataset_dir, dataset_name = dataset_name, roidbdir = roi_path , roidbfile = ss_file})
+    print(dataset)
+else
+    dataset = detection.DataSetPascal({image_set = image_set, year = year, datadir = dataset_dir, dataset_name = dataset_name, roidbdir = roi_path , roidbfile = ss_file, comp_id = comp_id})
+end
 -- Creating the detection net
 --model_opt = {}
 --model_opt.test = true --false
@@ -26,10 +32,11 @@ local dataset = detection.DataSetPascal({image_set = image_set, year = year, dat
 local model_opt = {}
 model_opt.fine_tuning = false
 model_opt.test = true
-if config.dataset== 'MSCOCO' then
-   model_opt.nclass = 80
+if config.dataset== 'COCO' then
+    model_opt.nclass = 80
 else
-   model_opt.nclass = 20
+    -- Pascal
+    model_opt.nclass = 20
 end
 
 network = detection.Net(model_path,param_path, model_opt)

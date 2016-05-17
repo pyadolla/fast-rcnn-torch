@@ -49,7 +49,9 @@ function DataSetDetection:__tostring__()
   str = str .. '\n  ImageSet: '.. self.image_set
   str = str .. '\n  Number of images: '.. self:size()
   str = str .. '\n  Classes:'
-  for k,v in ipairs(self.classes) do
+  for k,v in pairs(self.classes) do
+  -- This didn't work for COCO for some reason
+  -- for k,v in ipairs(self.classes) do
     str = str .. '\n    '..v
   end
   return str

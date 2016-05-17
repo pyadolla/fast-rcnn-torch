@@ -1,0 +1,20 @@
+
+
+#Finishing up COCO dataset
+current errors
+1--- 
+bad argument #2 to '?' (start index out of bound at /tmp/luarocks_torch-scm-1-5536/torch7/generic/Tensor.c:961)
+stack traceback:
+        [C]: at 0x7f828711c410
+        [C]: in function '__index'
+        ./network/NetworkWrapper.lua:121: in function 'testNetwork'
+        main_test.lua:49: in main chunk
+        [C]: in function 'dofile'
+        [string "_RESULT={dofile('main_test.lua')}"]:1: in main chunk
+        [C]: in function 'xpcall'
+        ...-greg/common/torch-openblas/share/lua/5.1/trepl/init.lua:651: in function 'repl'
+        ...mon/torch-openblas/lib/luarocks/rocks/trepl/scm-1/bin/th:199: in main chunk
+        [C]: at 0x00406080
+
+
+

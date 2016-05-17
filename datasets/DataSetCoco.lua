@@ -1,3 +1,4 @@
+-- Coco
 local DataSetCoco,parent = torch.class('detection.DataSetCoco', 'detection.DataSetDetection')
 local env = require 'argcheck.env'
 local argcheck = dofile'datasets/argcheck.lua'
@@ -30,12 +31,12 @@ local initcheck = argcheck{
    check=function(datadir)
            return paths.dirp(datadir)
          end},
-  {name="with_cloud",
+   {name="with_cloud",
    type="boolean",
    help="Whether to load proposals with cloud annotation",
    opt = true},
    {name="year",
-   type="string",
+   type="number",
    help="MSCOCO year",
    opt = true},
   {name="proposal_root_path",
@@ -53,34 +54,33 @@ local initcheck = argcheck{
    {name = "proposal_method",
    type = "string",
    help = "Name of the annotation method",
-	opt = true},
-	{name = "img_path",
+   opt = true},
+   {name = "img_path",
    type = "string",
    help = "image path",
-	opt = true
-	},
-	{name = "crowd_threshold",
+   opt = true},
+   {name = "crowd_threshold",
    type = "number",
    help = "threshold used for prunning proposals overlapping the crowd ground truth boxes",
-	opt = true
-	},
-	{name = "top_k",
+   opt = true},
+   {name = "top_k",
    type = "number",
    help = "Number of proposals to be used",
-	opt = true
-	},
-	{ name = "res_save_path",
-	type = "string",
-	opt = true
-	},
-	{name = "eval_res_save_path",
-	typr = "string",
-	opt = true
-	},
-	{name = "load_from_cache",
-	type = "boolean",
-	opt = true
-	}
+   opt = true},
+   {name = "res_save_path",
+   type = "string",
+   opt = true},
+   {name = "eval_res_save_path",
+   typr = "string",
+   opt = true},
+   {name = "load_from_cache",
+   type = "boolean",
+   opt = true},
+   {name="roidbdir",
+   type="string",
+   help="Path to the folder with the bounding boxes",
+   opt = true} 
+   
 }
 
 function DataSetCoco:__init(...)
@@ -132,6 +132,7 @@ function DataSetCoco:__init(...)
 	 if not self.annotation_root_path then
 	 	self.annotation_root_path = paths.concat(self.datadir, self.dataset_name, 'annotations')
 	 end
+	 -- print("self.annotation_root_path",self.annotation_root_path)
 
 	 if not self.proposal_root_path then
 	 	local file_name = 'COCO_'..self.image_set..self.year
@@ -141,8 +142,11 @@ function DataSetCoco:__init(...)
 	 	if self.image_set == 'val' then
 	 		file_name = file_name .. '_0'
 	 	end
-	 	self.proposal_root_path = paths.concat(self.datadir, self.dataset_name, 'precomputed-coco', self.proposal_method,'mat','COCO_'..self.image_set..self.year)
+	 	-- self.proposal_root_path = paths.concat(self.datadir, self.dataset_name, 'ROI' ..self.image_set .. self.year,'COCO_'..self.image_set..self.year)
+		self.proposal_root_path = paths.concat(self.datadir, self.dataset_name, 'ROI' ..self.image_set .. self.year)
 	 end
+	 -- print("self.proposal_root_path",self.proposal_root_path)
+
 	 -- Loading annotation file
 	 local annotations_cache_path = paths.concat(config.cache,'coco_'.. self.image_set ..self.year ..'_annotations_cached.t7')
 	 if paths.filep(annotations_cache_path) and self.load_from_cache then
@@ -234,7 +238,7 @@ function DataSetCoco:_createSampleSet(nSample_per_class,min_objs_per_img,new_ima
 	local new_inverted_image_ids = tds.Hash()
 	local objs_per_img = class_counts:sum(2)
 	local img_count = 1
-	debugger.enter()
+		--debugger.enter()
 	for c=1,n_class do
 		local valid_samples = class_counts[{{},{c}}]:ge(1):cmul(objs_per_img:ge(min_objs_per_img)):cmul(already_selected:eq(0)):eq(1)
 		valid_samples = utils:logical2ind(valid_samples)
@@ -300,7 +304,7 @@ function DataSetCoco:_prepareGTs()
 
 		local cur_id = self.inverted_image_ids[self.annotations['annotations'][i].image_id]
 		if cur_id==56 then
-			debugger.enter()
+			--debugger.enter()
 		end
 		local cur_box = self.annotations['annotations'][i].bbox
 		cur_box = torch.FloatTensor({{cur_box[1],cur_box[2],cur_box[3],cur_box[4]}})
@@ -376,15 +380,18 @@ function DataSetCoco:loadROIDB()
 	end
 
 	self.roidb = tds.Hash()
-
-	for i=1,#self:size() do
+	for i=1,self:size() do
 		if i%1000 ==0 then
 			print(string.format('Loaded proposals for %d images!',i))
 		end
 		-- determine the file name
 		local folder_name = tostring(self.image_paths[i]):sub(1,22)
-		local file_path = paths.concat(self.proposal_root_path,folder_name,paths.basename(self.image_paths[i],'jpg')..'.mat')
+		--local file_path = paths.concat(self.proposal_root_path,folder_name,paths.basename(self.image_paths[i],'jpg')..'.mat')
+		local file_path = paths.concat(self.proposal_root_path,paths.basename(self.image_paths[i],'jpg')..'.mat')
+	
+		--This breaks when using lua_5.2
 		local proposals = matio.load(file_path)['boxes']
+		--
 		local n_box = math.min(self.top_k,proposals:size(1))
 		self.roidb[i] = proposals[{{1,n_box},{}}]
 	end
@@ -392,6 +399,7 @@ function DataSetCoco:loadROIDB()
 	-- Cache the loaded proposals
 	self:_filterCrowd()
 	torch.save(cache_path,self.roidb)
+	print("finished loadROIDB")
 end
 
 function DataSetCoco:_loadAnnotations()
@@ -425,7 +433,7 @@ function DataSetCoco:_test_evaluation()
 		local gts = self.gts[i].bboxes
 		local classes = self.gts[i].classes
 		if classes == nil then
-			debugger.enter()
+			--debugger.enter()
 		end
 		for j=1,#self.classes do
 			local cur_inds = utils:logical2ind(classes:eq(j))
@@ -480,10 +488,10 @@ end
 
 function DataSetCoco:_filterCrowd()
 	for i=1,self:size() do
-	  local boxes = self:getROIBoxes(i)
-	  -- Filter the bboxes
-	  local cur_gts = self.gts[i].bboxes
-	  if cur_gts:numel() > 0 then
+	    local boxes = self:getROIBoxes(i)
+	    -- Filter the bboxes
+	    local cur_gts = self.gts[i].bboxes
+	    if cur_gts:numel() > 0 then
 		  local cur_iscrowd = self.gts[i].iscrowd
 		  local bad_gt_ids = utils:logical2ind(cur_iscrowd:eq(1))
 		  if bad_gt_ids:numel() == cur_gts:size(1) then
@@ -506,6 +514,6 @@ function DataSetCoco:_filterCrowd()
 		  		self.roidb[i] = boxes:index(1,good_bbox_ids)
 		  	end
 		  end
-		end
+	    end
 	end
 end
