@@ -13,10 +13,10 @@ local ss_dir = './data/datasets/selective_search_data/'
 --local ss_file =  paths.concat(ss_dir,dataset_name .. '_' .. image_set .. '.mat')
 local param_path = config.model_weights
 local model_path = config.model_def
-
+local comp_id = 'comp4-4567'
 
 -- Loading the dataset
-local dataset = detection.DataSetPascal({image_set = image_set, year = year, datadir = dataset_dir, dataset_name = dataset_name, roidbdir = ss_dir , roidbfile = ss_file})
+local dataset = detection.DataSetPascal({image_set = image_set, year = year, datadir = dataset_dir, dataset_name = dataset_name, roidbdir = ss_dir , roidbfile = ss_file, comp_id = comp_id})
 
 -- Creating the detection net
 --model_opt = {}

@@ -1,11 +1,15 @@
 -- Require the detection package
 require 'detection'
+
+torch.setheaptracking(true)
+cutorch.setHeapTracking(true)
+
 -- Paths
 local year = config.year
 local dataset_name = config.dataset
 local image_set = config.train_img_set
 local dataset_dir = config.dataset_path --paths.concat(config.dataset_path,dataset_name)
-local ss_dir = './data/datasets/selective_search/'
+local ss_dir = './data/datasets/selective_search_data/'
 --local ss_file =  paths.concat(ss_dir, dataset_name .. '_' .. image_set .. '.mat')
 local param_path = config.pre_trained_file
 local model_path = config.model_def
