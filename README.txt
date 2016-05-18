@@ -17,6 +17,6 @@ arg={'-model_def', './models/VGG16/VGG16_ross.lua','-model_weights','','-year',2
 
 
 #testing running COCO main_test
-arg={'-model_def', './models/VGG16/VGG16_ross.lua','-model_weights','','-year',2014,'-dataset','COCO','-test_img_set','val'}
+arg={'-model_def', './models/VGG16/VGG16_ross_COCO.lua','-model_weights','','-year',2014,'-dataset','COCO','-test_img_set','val'}
 ####Still debugging it
 

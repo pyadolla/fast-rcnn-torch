@@ -117,15 +117,15 @@ function NetworkWrapper:testNetwork(db)
     misc_timer:reset()
 
     print(scores:max())
-    for j= 1,n_class do
-        local class_scores = scores[{{},{j+1}}]
-        local sel_inds = torch.range(1,n_box)[class_scores:ge(thresholds[j])]:long()
+    for cls= 1,n_class do
+        local class_scores = scores[{{},{cls+1}}]
+        local sel_inds = torch.range(1,n_box)[class_scores:ge(thresholds[cls])]:long()
         if sel_inds:numel() == 0 then
-          all_detections[j][i] = torch.FloatTensor()
+          all_detections[cls][i] = torch.FloatTensor()
         else
-
-          local class_boxes = pred_boxes:index(1,sel_inds)[{{},{j*4+1,(j+1)*4}}]
+          local class_boxes = pred_boxes:index(1,sel_inds)[{{},{cls*4+1,(cls+1)*4}}]
           class_scores = class_scores:index(1,sel_inds)
+
           -- keep top k scoring boxes
           -- here you can use torch.topk if your torch is up-to-date
           local top_scores , top_inds = torch.sort(class_scores, 1, true)
@@ -139,20 +139,20 @@ function NetworkWrapper:testNetwork(db)
 
           -- Push all values into the corresponding heap
           for k=1,class_scores:numel() do
-            heaps[j]:add(class_scores[k])
+            heaps[cls]:add(class_scores[k])
           end
 
           -- Pop if you collected more than max_per_set
-          if heaps[j]:getSize()> max_per_set then
-            while heaps[j]:getSize()>max_per_set do
-              heaps[j]:pop()
-              thresholds[j] = heaps[j]:top()
+          if heaps[cls]:getSize()> max_per_set then
+            while heaps[cls]:getSize()>max_per_set do
+              heaps[cls]:pop()
+              thresholds[cls] = heaps[cls]:top()
             end
           end
 
           -- Save all detections for now
 
-          all_detections[j][i] = class_boxes:float():cat(class_scores)
+          all_detections[cls][i] = class_boxes:float():cat(class_scores)
 
         end
     end

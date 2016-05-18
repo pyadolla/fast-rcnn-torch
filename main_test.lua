@@ -20,7 +20,6 @@ local dataset
 if dataset_name == 'COCO' then
     print('COCO')
     dataset = detection.DataSetCoco({image_set = image_set, year = year, datadir = dataset_dir, dataset_name = dataset_name, roidbdir = roi_path , roidbfile = ss_file})
-    print(dataset)
 else
     dataset = detection.DataSetPascal({image_set = image_set, year = year, datadir = dataset_dir, dataset_name = dataset_name, roidbdir = roi_path , roidbfile = ss_file, comp_id = comp_id})
 end

@@ -1,5 +1,7 @@
+cache
 cache/*
 data/trained_models/*
+data/trained_models
 data/torch_imagenet_models/*
 data/datasets/*
 data/log/*
