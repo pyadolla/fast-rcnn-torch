@@ -354,7 +354,7 @@ function DataSetCoco:getGTBoxes(i)
 end
 
 function DataSetCoco:size()
-  return #self.image_paths
+  return 10 --#self.image_paths
 end
 
 function DataSetCoco:_convert_to_x1y1x2y2(boxes)

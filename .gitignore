@@ -5,3 +5,5 @@ data/trained_models
 data/torch_imagenet_models/*
 data/datasets/*
 data/log/*
+utils/COCO-python-wrapper/coco-master
+

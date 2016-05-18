@@ -97,9 +97,9 @@ function NetworkWrapper:testNetwork(db)
     detect_timer:reset()
 
     local scores, pred_boxes
-    if n_box > 10e3 then --split over multiple detect calls in case we have too many bboxes
-	for k=1,math.floor(n_box/10e3)+1 do
-	   local scrs,prd_bxs=self:detect(im,bboxes[{{(k-1)*10e3+1,math.min(n_box,k*10e3)},{}}])
+    if n_box > 5e3 then --split over multiple detect calls in case we have too many bboxes
+	for k=1,math.floor(n_box/5e3)+1 do
+	   local scrs,prd_bxs=self:detect(im,bboxes[{{(k-1)*5e3+1,math.min(n_box,k*5e3)},{}}])
 	   if not(scores) then
 	       scores=scrs:clone()
                pred_boxes=prd_bxs:clone()

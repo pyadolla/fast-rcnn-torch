@@ -167,7 +167,7 @@ function DataSetPascal:__init(...)
   end
 
   self.img_ids = lines_from(string.format(self.imgsetpath,image_set))
-  self.num_imgs = #self.img_ids
+  self.num_imgs = #self.img_ids -- Change this to make smaller batch
 
   --
   if self.image then
@@ -266,7 +266,7 @@ function DataSetPascal:evaluate(all_detections)
 end
 
 function DataSetPascal:size()
-  return #self.img_ids
+  return #self.img_ids -- Also change this to make a smaller batch size
 end
 
 function DataSetPascal:getImage(i)
