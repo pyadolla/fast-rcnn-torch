@@ -23,14 +23,12 @@ if dataset_name == 'COCO' then
 else
     dataset = detection.DataSetPascal({image_set = image_set, year = year, datadir = dataset_dir, dataset_name = dataset_name, roidbdir = roi_path , roidbfile = ss_file, comp_id = comp_id})
 end
+
 -- Creating the detection net
---model_opt = {}
---model_opt.test = true --false
---model_opt.nclass = dataset:nclass()
---model_opt.fine_tunning = not config.resume_training
 local model_opt = {}
 model_opt.fine_tuning = false
 model_opt.test = true
+--model_opt.nclass = dataset:nclass()
 if config.dataset== 'COCO' then
     model_opt.nclass = 80
 else
@@ -43,6 +41,7 @@ collectgarbage()
 collectgarbage()
 -- Creating the wrapper
 local network_wrapper = detection.NetworkWrapper()
+
 -- Test the network
 print('Testing the network on ' .. dataset.image_set ..  ' set...')
 network_wrapper:testNetwork(dataset)

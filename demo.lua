@@ -43,4 +43,7 @@ local threshold = 0.5
 local cls = {'aeroplane','bicycle','bird','boat','bottle','bus','car',
   'cat','chair','cow','diningtable','dog','horse','motorbike',
   'person','pottedplant','sheep','sofa','train','tvmonitor'}
+
 utils:visualize_detections(im,bboxes,scores,threshold,cls)
+
+

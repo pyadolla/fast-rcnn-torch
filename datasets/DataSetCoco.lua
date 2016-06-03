@@ -79,7 +79,12 @@ local initcheck = argcheck{
    {name="roidbdir",
    type="string",
    help="Path to the folder with the bounding boxes",
-   opt = true} 
+   opt = true}--[[,
+   {name="attr",
+   type="string",
+   help="Path to the file with the attributes",
+   opt = true}
+  ]] 
    
 }
 
@@ -415,6 +420,49 @@ function DataSetCoco:nclass()
   return #self.classes
 end
 
+function DataSetCoco:loadATTRDB()
+	if self.attrdb then
+		return
+	end
+
+	local cache_name = 'attributes_' .. self.proposal_method ..'_coco' .. self.year .. '_' .. self.image_set  ..'.t7'
+	local cache_path = paths.concat(config.cache,cache_name)
+	if paths.filep(cache_path) then
+		print('Loading attributes from a cached file...')
+		self.attrdb = torch.load(cache_path)
+		return
+	end
+
+	self.attrdb = tds.Hash()
+	for i=1,self:size() do
+		if i%1000 ==0 then
+			print(string.format('Loaded attributes for %d images!',i))
+		end
+		-- determine the file name
+		local folder_name = tostring(self.image_paths[i]):sub(1,22)
+		--local file_path = paths.concat(self.proposal_root_path,folder_name,paths.basename(self.image_paths[i],'jpg')..'.mat')
+		local file_path = paths.concat(self.proposal_root_path,paths.basename(self.image_paths[i],'jpg')..'.mat')
+	
+		--This next line breaks when using lua_5.2
+		local proposals = matio.load(file_path)['boxes']
+		
+		local n_box = math.min(self.top_k,proposals:size(1))
+		self.attrdb[i] = proposals[{{1,n_box},{}}]
+	end
+
+	-- Cache the loaded proposals
+	torch.save(cache_path,self.attrdb)
+	print("finished loadAttrDB")
+end
+
+
+--Get the attribute for BBox i
+function DataSetCoco:getAttributes(i)
+   if not self.attrdb then
+    self:loadATTRDB()
+  end
+  return self.attrdb[i]   
+end
 
 function DataSetCoco:evaluate(all_detections)
 	self:_write_detections(all_detections)
